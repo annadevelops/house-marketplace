@@ -4,6 +4,7 @@ import {ReactComponent as ArrowRightIcon } from '../assets/svg/keyboardArrowRigh
 import visibilityIcon from '../assets/svg/visibilityIcon.svg'
 import { getAuth, createUserWithEmailAndPassword, updateProfile} from 'firebase/auth'; // see https://firebase.google.com/docs/auth/web/manage-users#update_a_users_profile for docs on creating a user with email and password then update their profile using updateProfile
 import {db} from '../firebase.config.js'
+import {doc, addDoc, setDoc, serverTimestamp} from 'firebase/firestore' //save to firebase database see https://firebase.google.com/docs/firestore/manage-data/add-data#set_a_document
 
 
 
@@ -38,12 +39,20 @@ function SignUp() {
       //call the createUserWithEmailAndPassword passing in email, password and auth
       const userCredential = await createUserWithEmailAndPassword(auth, email, password)
 
-      
+      //Signed in
       const user = userCredential.user
 
+      //Update the current signed in user Profile 
       updateProfile(auth.currentUser, {
         displayName: name
       } )
+
+      const formDataCopy = {...formData}
+      delete formDataCopy.password
+      formDataCopy.timestamp = serverTimestamp()
+
+
+      await setDoc(doc(db, 'users', user.uid), formDataCopy)
 
       navigate('/')
 
