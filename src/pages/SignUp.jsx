@@ -5,6 +5,7 @@ import visibilityIcon from '../assets/svg/visibilityIcon.svg'
 import { getAuth, createUserWithEmailAndPassword, updateProfile} from 'firebase/auth'; // see https://firebase.google.com/docs/auth/web/manage-users#update_a_users_profile for docs on creating a user with email and password then update their profile using updateProfile
 import {db} from '../firebase.config.js'
 import {doc, addDoc, setDoc, serverTimestamp} from 'firebase/firestore' //save to firebase database see https://firebase.google.com/docs/firestore/manage-data/add-data#set_a_document
+import { toast } from "react-toastify";
 
 
 
@@ -59,7 +60,7 @@ function SignUp() {
       navigate('/')
 
     } catch (error) {
-      console.log(error)
+      toast.error('Oops. Something went wrong with registration, please try again.')
     }
 
   }

@@ -4,6 +4,8 @@ import {
   Route
 } from 'react-router-dom'
 import index from './index.css'
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 import SignIn from './pages/SignIn';
 import SignUp from './pages/SignUp';
@@ -27,7 +29,8 @@ function App() {
       <Route path='/*' element={<SignIn/>}/>
     </Routes>
     <NavBar />
-    </Router> 
+    </Router>
+    <ToastContainer />
     </div>
   );
 }
