@@ -47,11 +47,13 @@ function SignUp() {
         displayName: name
       } )
 
+      /* Saving user's registration to Firestore. 
+      ** (1) Create a copy of FormData so we can delete the password before storing and add timestamp. Doing this will leave the FormData state unchanged; 
+      ** (2) Initialise serverTimestamp as formDataCopy.timestamp; 
+      ** (3) Call setDoc to create a doc in our intialised db with collection 'users', doc named user's uid and formDataCopy as body data. If no collection with that name Firestore creates new collection */
       const formDataCopy = {...formData}
       delete formDataCopy.password
       formDataCopy.timestamp = serverTimestamp()
-
-
       await setDoc(doc(db, 'users', user.uid), formDataCopy)
 
       navigate('/')

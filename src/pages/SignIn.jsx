@@ -1,7 +1,8 @@
 import { useState } from "react"
-import { Link, useNavigate } from "react-router-dom"
+import { Link, Navigate, useNavigate } from "react-router-dom"
 import {ReactComponent as ArrowRightIcon } from '../assets/svg/keyboardArrowRightIcon.svg'
 import visibilityIcon from '../assets/svg/visibilityIcon.svg'
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 
 
 
@@ -15,12 +16,30 @@ function SignIn() {
   //deconstructing the formData object so we can use email, password without formData.email or formData.password
   const {email, password} = formData
 
+  const navigate = useNavigate()
+
   // handleChange function takes in the event when called then setFormData using the id of the element so below input['email'] has id of email then takes that and set that to the value
   const handleChange = (e) => {
     setFormData((prevState) => ({
         ...prevState,
         [e.target.id]: e.target.value
     }))
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+
+    try {
+      const auth = getAuth();
+      const userCredential = await signInWithEmailAndPassword(auth, email, password)
+      //Signed in
+      const user = userCredential.user
+      if(user) {
+        navigate('/profile')
+      }
+    } catch (error) {
+      console.log(error.message)
+    }
   }
 
     return (
@@ -31,14 +50,15 @@ function SignIn() {
               Welcome Back!
             </p>
           </header>
-          <form action="">
+          <form action="" onSubmit={handleSubmit}>
             <input type="email" className="emailInput" placeholder='Email' id='email' value={email} onChange={handleChange} />
             <div className="passwordInputDiv">
               <input type={showPassword ? 'text': 'password'}
               className='passwordInput'
               placeholder='password'
               value={password}
-              onChange={handleChange} />
+              onChange={handleChange} 
+              id='password'/>
               <img src={visibilityIcon} alt="show password" className="showPassword" onClick={(prevState) => !prevState } />
             </div>
             <Link to='/forgot-password' className='forgotPasswordLink'>
