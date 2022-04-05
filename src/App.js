@@ -14,6 +14,7 @@ import Profile from './pages/Profile';
 import ForgotPassword from './pages/ForgotPassword';
 import Offers from './pages/Offers';
 import NavBar from './components/NavBar';
+import PrivateRoute from './components/PrivateRoute';
 
 function App() {
   return ( <
@@ -21,11 +22,13 @@ function App() {
     <Router >
     <Routes >
       <Route path='/' element={<Explore/>}/>
-      <Route path='sign-in' element={<SignIn/>}/>
-      <Route path='sign-up' element={<SignUp/>}/>
-      <Route path='offers' element={<Offers/>}/>
-      <Route path='profile' element={<Profile/>}/>
-      <Route path='forgot-password' element={<ForgotPassword/>}/>
+      <Route path='/sign-in' element={<SignIn/>}/>
+      <Route path='/sign-up' element={<SignUp/>}/>
+      <Route path='/offers' element={<Offers/>}/>
+      <Route path='/profile' element={<PrivateRoute/>}>
+        <Route path='/profile' element={<Profile/>}/>
+      </Route>
+      <Route path='/forgot-password' element={<ForgotPassword/>}/>
       <Route path='/*' element={<SignIn/>}/>
     </Routes>
     <NavBar />

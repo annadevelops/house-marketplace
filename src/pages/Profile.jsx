@@ -74,7 +74,7 @@ function Profile() {
             value={name}
             onChange={handleChange}/>
             <input type="text" id='email' className='profileEmail'
-            disabled='true'
+            disabled
             value={email}
             onChange={handleChange}/>
           </form>
