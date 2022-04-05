@@ -2,6 +2,10 @@ import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import {ReactComponent as ArrowRightIcon } from '../assets/svg/keyboardArrowRightIcon.svg'
 import visibilityIcon from '../assets/svg/visibilityIcon.svg'
+import { getAuth, createUserWithEmailAndPassword, updateProfile} from 'firebase/auth'; // see https://firebase.google.com/docs/auth/web/manage-users#update_a_users_profile for docs on creating a user with email and password then update their profile using updateProfile
+import {db} from '../firebase.config.js'
+
+
 
 function SignUp() {
   const [showPassword, setShowPassword] = useState(false)
@@ -14,12 +18,39 @@ function SignUp() {
   //deconstructing the formData object so we can use email, password without formData.email or formData.password
   const {email, password, name} = formData
 
+  const navigate = useNavigate()
+
   // handleChange function takes in the event when called then setFormData using the id of the element so below input['email'] has id of email then takes that and set that to the value
   const handleChange = (e) => {
     setFormData((prevState) => ({
         ...prevState,
         [e.target.id]: e.target.value
     }))
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+
+    try {
+      // Initialize Firebase Authentication and get a reference to the service
+      const auth = getAuth()
+
+      //call the createUserWithEmailAndPassword passing in email, password and auth
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+
+      
+      const user = userCredential.user
+
+      updateProfile(auth.currentUser, {
+        displayName: name
+      } )
+
+      navigate('/')
+
+    } catch (error) {
+      console.log(error)
+    }
+
   }
 
     return (
@@ -30,16 +61,18 @@ function SignUp() {
               Welcome!
             </p>
           </header>
-          <form action="">
+          <form action="" onSubmit={handleSubmit}>
           <input type="text" className="nameInput" placeholder='Name' id='name' value={name} onChange={handleChange} />
             <input type="email" className="emailInput" placeholder='Email' id='email' value={email} onChange={handleChange} />
             <div className="passwordInputDiv">
-              <input type={showPassword ? 'text': 'password'}
+              <input 
+              type={showPassword ? 'text': 'password'}
               className='passwordInput'
-              placeholder='password'
+              placeholder='Password'
               value={password}
-              onChange={handleChange} />
-              <img src={visibilityIcon} alt="show password" className="showPassword" onClick={(prevState) => !prevState } />
+              onChange={handleChange}
+              id='password'/>
+              <img src={visibilityIcon} alt="show password" className="showPassword" onClick={() => setShowPassword((prevState) => !prevState )} />
             </div>
             <div className="signUpBar">
               <p className="signUpText">Sign Up</p>
