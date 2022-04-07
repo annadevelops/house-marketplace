@@ -17,6 +17,7 @@ import NavBar from './components/NavBar';
 import PrivateRoute from './components/PrivateRoute';
 import Category from './pages/Category';
 import CreateListing from './pages/CreateListing';
+import Listing from './pages/Listing';
 
 function App() {
   return ( <
@@ -28,6 +29,7 @@ function App() {
       <Route path='/sign-up' element={<SignUp/>}/>
       <Route path='/offers' element={<Offers/>}/>
       <Route path='/category/:categoryName' element={<Category/>}/>
+      <Route path='/category/:categoryName/:listingID' element={<Listing/>}/>
       <Route path='/profile' element={<PrivateRoute/>}>
         <Route path='/profile' element={<Profile/>}/>
       </Route>
