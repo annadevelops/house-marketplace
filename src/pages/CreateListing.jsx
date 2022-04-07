@@ -3,9 +3,12 @@ import { getAuth, onAuthStateChanged } from "firebase/auth"
 import { toast } from "react-toastify"
 import { useNavigate } from "react-router-dom"
 import { serverTimestamp } from "firebase/firestore"
+import Spinner from '../components/Spinner'
+
 
 function CreateListing() {
 const navigate = useNavigate()
+const [geolocationEnabled, setgeolocationEnabled] = useState(true)
 
 
 const [listing, setListing] = useState({
@@ -13,11 +16,11 @@ const [listing, setListing] = useState({
     bedrooms: 0,
     discountedPrice: 2000,
     furnished: true,
-    geolocationEnabled: true,
     latitude: '',
     longitude: '',
     imageUrls: [],
     location: '',
+    images: {},
     name: '',
     offer: true,
     parking: true,
@@ -26,9 +29,9 @@ const [listing, setListing] = useState({
     userRef: ''
 })
 
+const [loading, setLoading] = useState(false)
 
-
-const {bathrooms, bedrooms, discountedPrice, furnished, geolocationEnabled, latitude, longitude, imageUrls, location, name, offer, parking, regularPrice, timestamp, type, userRef} = listing
+const {bathrooms, bedrooms, discountedPrice, furnished, latitude, longitude, imageUrls, images, location, name, offer, parking, regularPrice, type, userRef} = listing
 
 useEffect(() => {
   //on load check if a user is signed in or not 
@@ -49,13 +52,41 @@ useEffect(() => {
     }
 }, [])
 
-const handleSubmit = (e) => {
+const handleSubmit = async (e) => {
   e.preventDefault()
-  setListing(prevState => ({
-    ...prevState,
-    [e.target.id]: e.target.value
-  }))
-  console.log(listing)
+  setLoading(true)
+
+  if (discountedPrice > regularPrice) {
+    setLoading(false)
+    toast.error('Discounted price has to be lower than regular price. Please adjust.')
+  }
+
+  if(imageUrls.length > 6) {
+    setLoading(false)
+    toast.error('Number of images exceed the maximum amount of 6')
+  }
+
+  let geolocation = {}
+  let location
+
+  //get geolocation lat and lng using Google Geocoding API
+  if(geolocationEnabled) {
+    const response = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${location}&key=${process.env.REACT_APP_GOOGLE_GEOCODING_API_KEY}`)
+    const data = await response.json()
+
+
+    geolocation.lat = data.results[0]?.geometry.location.lat ?? 0
+    geolocation.lng = data.results[0]?.geometry.location.lng ?? 0
+    location = data.status === 'ZERO_RESULTS' ? undefined : data.results[0]?.formatted_address
+    if(data.status === 'ZERO_RESULTS') {
+      setLoading(false)
+      toast.error("Please enter a valid address.")
+    }
+  } else {
+    geolocation.lat = latitude
+    geolocation.lng = longitude
+  }
+
 }
 
 const handleMutate = (e) => {
@@ -74,7 +105,7 @@ const handleMutate = (e) => {
     if(e.target.files){
       setListing((prevState) => ({
         ...prevState,
-        imageUrls: e.target.files
+        images: e.target.files
       }))
     }
 
@@ -85,6 +116,10 @@ const handleMutate = (e) => {
         [e.target.id]: boolean ?? e.target.value,
       }))
     }
+}
+
+if(loading) {
+  return <Spinner/>
 }
 
   return (
