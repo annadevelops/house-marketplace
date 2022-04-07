@@ -2,10 +2,10 @@ import { useEffect, useState } from "react"
 import { getAuth, onAuthStateChanged } from "firebase/auth"
 import { toast } from "react-toastify"
 import { useNavigate } from "react-router-dom"
-import { serverTimestamp } from "firebase/firestore"
+import { serverTimestamp, collection, addDoc} from "firebase/firestore"
 import Spinner from '../components/Spinner'
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import {db} from '../firebase.config'
+import { db } from '../firebase.config.js'
 import {v4 as uuidv4} from 'uuid'
 
 
@@ -14,14 +14,13 @@ const navigate = useNavigate()
 const [geolocationEnabled, setgeolocationEnabled] = useState(true)
 
 const [listing, setListing] = useState({
-    bathrooms: 0,
-    bedrooms: 0,
+    bathroom: 0,
+    bedroom: 0,
     discountedPrice: 2000,
     furnished: true,
     latitude: '',
     longitude: '',
-    imageUrls: [],
-    location: '',
+    address: '',
     images: {},
     name: '',
     offer: true,
@@ -33,7 +32,7 @@ const [listing, setListing] = useState({
 
 const [loading, setLoading] = useState(false)
 
-const {bathrooms, bedrooms, discountedPrice, furnished, latitude, longitude, imageUrls, images, location, name, offer, parking, regularPrice, type, userRef} = listing
+const {bathroom, bedroom, discountedPrice, furnished, latitude, longitude, imageUrls, images, address, name, offer, parking, regularPrice, type, userRef} = listing
 
 const auth = getAuth()
 useEffect(() => {
@@ -76,7 +75,6 @@ const handleSubmit = async (e) => {
     const response = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${location}&key=${process.env.REACT_APP_GOOGLE_GEOCODING_API_KEY}`)
     const data = await response.json()
 
-
     geolocation.lat = data.results[0]?.geometry.location.lat ?? 0
     geolocation.lng = data.results[0]?.geometry.location.lng ?? 0
     location = data.status === 'ZERO_RESULTS' ? undefined : data.results[0]?.formatted_address
@@ -87,6 +85,7 @@ const handleSubmit = async (e) => {
   } else {
     geolocation.lat = latitude
     geolocation.lng = longitude
+    location = address
   }
 
   //function to store images in firebase - will loop through the images in listing and call this function on each image
@@ -135,18 +134,35 @@ const handleSubmit = async (e) => {
     })
   }
 
-  //storing each image url in imageUrls by mapping through images and call storeImage on each image
+  //storing each image url in imageUrls by mapping through images and call storeImage on each image which returns an array of downloadURL promises then using Promise.all to resolve the array and store resolved promises in the imageUrls array
   const imageUrls = await Promise.all(
     [...images].map((image) => storeImage(image))
-    ).catch(() => {
+    ).catch(() => { //if promise is rejected, it's catched here
       setLoading(false)
       toast.error('Images not uploaded')
       return
     })
 
-  console.log(imageUrls)
+    //creating a copy of the listing to clean up data before uploading it to Firestore
+  const listingCopy = {
+    ...listing,
+    imageUrls,
+    geolocation,
+    timestamp: serverTimestamp()
+  }
 
+  listingCopy.location = location
+  delete listingCopy.images
+  delete listingCopy.address
+  delete listingCopy.latitude
+  delete listingCopy.longitude
+  !listingCopy.offer && delete listingCopy.discountedPrice
+
+  //calling addDoc to create the new listing then navigate to its own url
+  const docRef = await addDoc(collection(db, 'listings'), listingCopy)
   setLoading(false)
+  toast.success('Listing created successfully!')
+  navigate(`/category/${listingCopy.type}/${docRef.id}`)
 
 }
 
@@ -191,7 +207,7 @@ if(loading) {
 
       <main>
         <form onSubmit={handleSubmit}>
-          <label className='formLabel'>Sell / Rent</label>
+          <label className='formLabel'>Sale / Rent</label>
           <div className='formButtons'>
             <button
               type='button'
@@ -200,7 +216,7 @@ if(loading) {
               value='sale'
               onClick={handleMutate}
             >
-              Sell
+              Sale
             </button>
             <button
               type='button'
@@ -231,8 +247,8 @@ if(loading) {
               <input
                 className='formInputSmall'
                 type='number'
-                id='bedrooms'
-                value={bedrooms}
+                id='bedroom'
+                value={bedroom}
                 onChange={handleMutate}
                 min='1'
                 max='50'
@@ -244,8 +260,8 @@ if(loading) {
               <input
                 className='formInputSmall'
                 type='number'
-                id='bathrooms'
-                value={bathrooms}
+                id='bathroom'
+                value={bathroom}
                 onChange={handleMutate}
                 min='1'
                 max='50'
@@ -306,12 +322,12 @@ if(loading) {
             </button>
           </div>
 
-          <label className='formLabel'>location</label>
+          <label className='formLabel'>Location</label>
           <textarea
             className='formInputAddress'
             type='text'
-            id='location'
-            value={location}
+            id='address'
+            value={address}
             onChange={handleMutate}
             required
           />
