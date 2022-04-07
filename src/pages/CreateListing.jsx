@@ -17,7 +17,7 @@ const [listing, setListing] = useState({
     latitude: '',
     longitude: '',
     imageUrls: [],
-    address: '',
+    location: '',
     name: '',
     offer: true,
     parking: true,
@@ -28,9 +28,10 @@ const [listing, setListing] = useState({
 
 
 
-const {bathrooms, bedrooms, discountedPrice, furnished, geolocationEnabled, latitude, longitude, imageUrls, address, name, offer, parking, regularPrice, timestamp, type, userRef} = listing
+const {bathrooms, bedrooms, discountedPrice, furnished, geolocationEnabled, latitude, longitude, imageUrls, location, name, offer, parking, regularPrice, timestamp, type, userRef} = listing
 
 useEffect(() => {
+  //on load check if a user is signed in or not 
     try {
         const auth = getAuth()
         onAuthStateChanged(auth, (user) => {
@@ -48,20 +49,42 @@ useEffect(() => {
     }
 }, [])
 
-const handleSubmit = () => {
-
+const handleSubmit = (e) => {
+  e.preventDefault()
+  setListing(prevState => ({
+    ...prevState,
+    [e.target.id]: e.target.value
+  }))
+  console.log(listing)
 }
 
 const handleMutate = (e) => {
-    if(e.target.id !== imageUrls) {
-        setListing(prevState => ({
-            ...prevState,
-            [e.target.id]: e.target.value
-        }))
-    } else {
-     
+  //boolean values from event returns as a string instead of a boolean i.e. 'true' and not true so setting boolean as null then reassign to boolean if that's the value
+    let boolean = null
+
+    if(e.target.value === 'true') {
+      boolean = true
+    } 
+
+    if(e.target.value === 'false') {
+      boolean = false
     }
-    
+
+    //Files - check if files then set imagesUrls to be the files. If set to be value then only one file is updated not all
+    if(e.target.files){
+      setListing((prevState) => ({
+        ...prevState,
+        imageUrls: e.target.files
+      }))
+    }
+
+    //If not files - i.e. number, boolean then set state of listing accordingly. Check if boolean is null using the nullish coalescing operator (https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_coalescing_operator) ?? - if not null, returns the boolean, if null returns the value
+    if(!e.target.files) {
+      setListing((prevState) => ({
+        ...prevState,
+        [e.target.id]: boolean ?? e.target.value,
+      }))
+    }
 }
 
   return (
@@ -187,12 +210,12 @@ const handleMutate = (e) => {
             </button>
           </div>
 
-          <label className='formLabel'>Address</label>
+          <label className='formLabel'>location</label>
           <textarea
             className='formInputAddress'
             type='text'
-            id='address'
-            value={address}
+            id='location'
+            value={location}
             onChange={handleMutate}
             required
           />
