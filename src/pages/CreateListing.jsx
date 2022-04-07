@@ -4,12 +4,14 @@ import { toast } from "react-toastify"
 import { useNavigate } from "react-router-dom"
 import { serverTimestamp } from "firebase/firestore"
 import Spinner from '../components/Spinner'
+import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import {db} from '../firebase.config'
+import {v4 as uuidv4} from 'uuid'
 
 
 function CreateListing() {
 const navigate = useNavigate()
 const [geolocationEnabled, setgeolocationEnabled] = useState(true)
-
 
 const [listing, setListing] = useState({
     bathrooms: 0,
@@ -33,10 +35,10 @@ const [loading, setLoading] = useState(false)
 
 const {bathrooms, bedrooms, discountedPrice, furnished, latitude, longitude, imageUrls, images, location, name, offer, parking, regularPrice, type, userRef} = listing
 
+const auth = getAuth()
 useEffect(() => {
-  //on load check if a user is signed in or not 
+  //on load check if a user is signed in or not
     try {
-        const auth = getAuth()
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 setListing({...listing, userRef: user.uid})
@@ -61,7 +63,7 @@ const handleSubmit = async (e) => {
     toast.error('Discounted price has to be lower than regular price. Please adjust.')
   }
 
-  if(imageUrls.length > 6) {
+  if(images.length > 6) {
     setLoading(false)
     toast.error('Number of images exceed the maximum amount of 6')
   }
@@ -86,6 +88,65 @@ const handleSubmit = async (e) => {
     geolocation.lat = latitude
     geolocation.lng = longitude
   }
+
+  //function to store images in firebase - will loop through the images in listing and call this function on each image
+  const storeImage = async (image) => {
+    //return a new Promise because each function uploads one image and up to 6 images can be uploaded at a time so the function needs to be called multiple times which using a Promise would help 
+    return new Promise((resolve, reject) => {
+      const storage = getStorage()
+      //setting the file name so later on we can create a reference for it on Firebase and then use that ref to interact with the image
+      const fileName = `${auth.currentUser.uid}-${image.name}-${uuidv4()}`
+
+      //creating the reference to the image
+      const storageRef = ref(storage, 'images/' + fileName)
+
+      //uploadBytesResumable returns an UploadTask which is assigned here to an uploadTask so the uploadTask can be listened to below for changes and status reporting
+      const uploadTask = uploadBytesResumable(storageRef, image);
+
+      // Listen for state changes, errors, and completion of the upload.
+          uploadTask.on('state_changed', 
+          (snapshot) => {
+            // Observe state change events such as progress, pause, and resume
+            // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
+            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            console.log('Upload is ' + progress + '% done');
+            switch (snapshot.state) {
+              case 'paused':
+                console.log('Upload is paused');
+                break;
+              case 'running':
+                console.log('Upload is running');
+                break;
+            }
+          }, 
+          (error) => {
+            // Handle unsuccessful uploads
+            reject(error)
+          }, 
+          () => {
+            // Handle successful uploads on complete
+            // For instance, get the download URL: https://firebasestorage.googleapis.com/...
+            getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+              resolve(downloadURL);
+            });
+          }
+        );
+
+    })
+  }
+
+  //storing each image url in imageUrls by mapping through images and call storeImage on each image
+  const imageUrls = await Promise.all(
+    [...images].map((image) => storeImage(image))
+    ).catch(() => {
+      setLoading(false)
+      toast.error('Images not uploaded')
+      return
+    })
+
+  console.log(imageUrls)
+
+  setLoading(false)
 
 }
 
