@@ -18,6 +18,7 @@ import PrivateRoute from './components/PrivateRoute';
 import Category from './pages/Category';
 import CreateListing from './pages/CreateListing';
 import Listing from './pages/Listing';
+import Contact from './pages/Contact';
 
 function App() {
   return ( <
@@ -33,6 +34,7 @@ function App() {
       <Route path='/profile' element={<PrivateRoute/>}>
         <Route path='/profile' element={<Profile/>}/>
       </Route>
+      <Route path='contact/:landlordID' element={<Contact/>}/>
       <Route path='create-listing' element={<CreateListing/>}/>
       <Route path='/forgot-password' element={<ForgotPassword/>}/>
       <Route path='/*' element={<SignIn/>}/>
