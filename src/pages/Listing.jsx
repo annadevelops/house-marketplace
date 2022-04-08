@@ -8,6 +8,17 @@ import Spinner from "../components/Spinner";
 import shareIcon from '../assets/svg/shareIcon.svg'
 //This import will crash the app - see  https://stackoverflow.com/questions/67552020/how-to-fix-error-failed-to-compile-node-modules-react-leaflet-core-esm-pat to solve
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
+// import Swiper core and required modules
+// import Swiper core and required modules
+import { Navigation, Pagination, Scrollbar, A11y } from 'swiper';
+
+import { Swiper, SwiperSlide } from 'swiper/react';
+
+// Import Swiper styles
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
+import 'swiper/css/scrollbar';
 
 function Listing() {
     const [listing, setListing] = useState(null)
@@ -38,6 +49,30 @@ if(loading) {
 
   return (
     <main>
+       <Swiper
+      // install Swiper modules
+        modules={[Navigation, Pagination, Scrollbar, A11y]}
+        spaceBetween={50}
+        slidesPerView={1}
+        navigation
+        pagination={{ clickable: true }}
+        scrollbar={{ draggable: true }}
+        onSwiper={(swiper) => console.log(swiper)}
+        onSlideChange={() => console.log('slide change')}
+        //swiper 8.0.* has to explicitly set a height for the Swiper container
+        style={{height: '400px'}}
+    >
+      {listing.imageUrls.map((url, index) => (
+        <SwiperSlide key={index}>
+          <div       
+          style={{
+            background: `url(${listing.imageUrls[index]}) center no-repeat`,
+            backgroundSize: 'cover'
+          }}
+          className="swiperSlideDiv"></div>
+        </SwiperSlide>
+      ))}
+    </Swiper>
       <div
         className='shareIconDiv'
         onClick={() => {
