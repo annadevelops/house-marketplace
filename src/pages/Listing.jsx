@@ -6,6 +6,8 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import Spinner from "../components/Spinner";
 import shareIcon from '../assets/svg/shareIcon.svg'
+//This import will crash the app - see  https://stackoverflow.com/questions/67552020/how-to-fix-error-failed-to-compile-node-modules-react-leaflet-core-esm-pat to solve
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 
 function Listing() {
     const [listing, setListing] = useState(null)
@@ -89,7 +91,25 @@ if(loading) {
 
         <p className='listingLocationTitle'>Location</p>
 
-       
+        <div className='leafletContainer'>
+          <MapContainer
+            style={{ height: '100%', width: '100%' }}
+            center={[listing.geolocation.lat, listing.geolocation.lng]}
+            zoom={13}
+            scrollWheelZoom={false}
+          >
+            <TileLayer
+              attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+              url='https://{s}.tile.openstreetmap.de/tiles/osmde/{z}/{x}/{y}.png'
+            />
+
+            <Marker
+              position={[listing.geolocation.lat, listing.geolocation.lng]}
+            >
+              <Popup>{listing.location}</Popup>
+            </Marker>
+          </MapContainer>
+        </div>
 
         {auth.currentUser?.uid !== listing.userRef && (
           <Link
