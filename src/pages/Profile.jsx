@@ -1,11 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import {updateDoc, doc} from 'firebase/firestore'
+import {updateDoc, doc, collection, query, where, getDocs} from 'firebase/firestore'
 import {getAuth, updateProfile} from 'firebase/auth'
 import {db} from '../firebase.config.js'
 import { toast } from 'react-toastify'
 import arrowRight from '../assets/svg/keyboardArrowRightIcon.svg'
 import homeIcon from '../assets/svg/homeIcon.svg'
+import ListingsList from '../components/ListingsList.jsx'
 
 function Profile() {
   const auth = getAuth()
@@ -18,9 +19,30 @@ function Profile() {
   })
   const [changeDetails, setChangeDetails] = useState(false)
 
+  //To check if users has any listings, if so keep count to render the ListingsList later on
+  const [listingsCount, setListingsCount] = useState([])
+
   const {name, email} = formData
 
-  
+  useEffect(() => {
+    const fetchListings = async () => {
+      const listingsRef = collection(db, 'listings')
+      const q = query(listingsRef, where("userRef", "==", auth.currentUser.uid))
+      const querySnapshot = await getDocs(q)
+      const listingsCountCopy = []
+      querySnapshot.forEach((doc) => {
+        listingsCountCopy.push(doc.id)
+      })
+      setListingsCount(listingsCountCopy)
+    }
+    fetchListings()
+
+  }, [])
+
+
+
+
+
   //logs out user
   const handleLogout = () => {
     auth.signOut()
@@ -86,6 +108,9 @@ function Profile() {
           <p>Sell or rent your home</p>
           <img src={arrowRight} alt='arrow right' />
         </Link>
+          
+          {/**Check if the user has any listings, if so, render the ListingsList component */}
+          {listingsCount.length > 0 && ( <ListingsList />)}
       </main>
     </div>
   )

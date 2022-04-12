@@ -77,7 +77,7 @@ const handleSubmit = async (e) => {
 
     geolocation.lat = data.results[0]?.geometry.location.lat ?? 0
     geolocation.lng = data.results[0]?.geometry.location.lng ?? 0
-    location = data.status === 'ZERO_RESULTS' ? undefined : data.results[0]?.formatted_address
+    location = data.status === 'ZERO_RESULTS' ? undefined : address
     if(data.status === 'ZERO_RESULTS') {
       setLoading(false)
       toast.error("Please enter a valid address.")
@@ -94,7 +94,7 @@ const handleSubmit = async (e) => {
     return new Promise((resolve, reject) => {
       const storage = getStorage()
       //setting the file name so later on we can create a reference for it on Firebase and then use that ref to interact with the image
-      const fileName = `${auth.currentUser.uid}-${image.name}-${uuidv4()}`
+      const fileName = `${auth.currentUser.uid}-${image.name}-${uuidv4()}-${name}`
 
       //creating the reference to the image
       const storageRef = ref(storage, 'images/' + fileName)

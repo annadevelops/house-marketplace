@@ -3,7 +3,16 @@ import { ReactComponent as DeleteIcon } from '../assets/svg/deleteIcon.svg'
 import bedIcon from '../assets/svg/bedIcon.svg'
 import bathtubIcon from '../assets/svg/bathtubIcon.svg'
 
+
 function ListingItem({listing, id, onDelete}) {
+
+  //calling onDelete prop of this child which the parent component passed down as a function onDelete which delete the listing from the database
+  const handleDelete = () => {
+    onDelete(id)
+  }
+
+
+
   return (
     <li className='categoryListing'>
       <Link
@@ -52,7 +61,7 @@ function ListingItem({listing, id, onDelete}) {
         <DeleteIcon
           className='removeIcon'
           fill='rgb(231, 76,60)'
-          onClick={() => onDelete(listing.id, listing.name)}
+          onClick={handleDelete} //calling function handleDelete above which calls the parent's function as passed in onDelete
         />
       )}
     </li>
