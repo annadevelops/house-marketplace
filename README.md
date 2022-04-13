@@ -1,4 +1,7 @@
-# Firebase Setup For House Marketplace
+# House Marketplace
+The app is published with vercel, click [here](https://house-marketplace-annadevelops.vercel.app/) to see a demo. The app was created using React and Firebase for authentication & database. See below for instructions on Firebase setup
+
+## Firebase Setup
 
 1. Create Firebase Project
 2. Create "web" app within firebase to get config values"
